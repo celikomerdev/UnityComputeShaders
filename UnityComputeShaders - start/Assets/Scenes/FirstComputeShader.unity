@@ -237,6 +237,7 @@ MonoBehaviour:
   rend: {fileID: 237966768}
   shader: {fileID: 7200000, guid: f6101a3a09b23477781b77a5511c0d95, type: 3}
   texResolution: 256
+  kernelName: SplitScreen
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

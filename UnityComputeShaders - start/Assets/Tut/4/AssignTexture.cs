@@ -7,6 +7,7 @@ public class AssignTexture : MonoBehaviour
 	[SerializeField]private Renderer rend = null;
 	[SerializeField]private ComputeShader shader = null;
 	[SerializeField]private int texResolution = 256;
+	[SerializeField]private string kernelName = "CSMain";
 	
 	private RenderTexture outputTexture = null;
 	private int kernelHandle = 0;
@@ -23,8 +24,9 @@ public class AssignTexture : MonoBehaviour
 	
 	private void InitShader()
 	{
-		kernelHandle = shader.FindKernel("CSMain");
+		kernelHandle = shader.FindKernel(name:kernelName);
 		shader.SetTexture(kernelHandle,"Result",outputTexture);
+		shader.SetInt(nameof(texResolution),texResolution);
 	}
 	
 	private void DispatchShader(int x,int y)
