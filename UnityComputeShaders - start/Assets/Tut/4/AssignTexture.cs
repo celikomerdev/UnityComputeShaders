@@ -19,7 +19,7 @@ public class AssignTexture : MonoBehaviour
 		outputTexture.Create();
 		rend.material.SetTexture("_MainTex",outputTexture);
 		InitShader();
-		DispatchShader(texResolution/16,texResolution/16);
+		// DispatchShader(texResolution/16,texResolution/16);
 	}
 	
 	private void InitShader()

@@ -3,6 +3,20 @@
 RWTexture2D<float4> Result;
 int texResolution;
 
+
+
+int inCircle(int2 pt,int radius)
+{
+	return (length(pt)<radius)? 1:0;
+}
+
+float glow(int2 pt,float radius)
+{
+	return (radius-length(pt))/radius;
+}
+
+
+
 #pragma kernel CSMain
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
@@ -16,5 +30,15 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 void SplitScreen (uint3 id : SV_DispatchThreadID)
 {
 	int halfRes = texResolution>>1;
-	Result[id.xy] = float4(id.x/halfRes,id.y/halfRes,0,0);
+	Result[id.xy] = float4(step(halfRes,id.x),step(halfRes,id.y),0,0);
 }
+
+#pragma kernel Circle
+[numthreads(8,8,1)]
+void Circle (uint3 id : SV_DispatchThreadID)
+{
+	int center = texResolution>>1;
+	int radius = texResolution>>2;
+	Result[id.xy] = float4(glow(id.xy-center,radius),0,0,0);
+}
+
