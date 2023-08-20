@@ -2,6 +2,7 @@
 
 RWTexture2D<float4> Result;
 int texResolution;
+float4 rect;
 
 
 
@@ -13,6 +14,23 @@ int inCircle(int2 pt,int radius)
 float glow(int2 pt,float radius)
 {
 	return (radius-length(pt))/radius;
+}
+
+int inRect(int2 pt,int radius)
+{
+	int weightX = length(pt.x)<radius? 1:0;
+	int weightY = length(pt.y)<radius? 1:0;
+	return weightX*weightY;
+}
+
+
+int inSquare(int2 pt,int4 rectInput)
+{
+	if(pt.x<rectInput.x) return 0;
+	else if(pt.y<rectInput.y) return 0;
+	else if(pt.x>rectInput.z) return 0;
+	else if(pt.y>rectInput.w) return 0;
+	else return 1;
 }
 
 
@@ -42,3 +60,10 @@ void Circle (uint3 id : SV_DispatchThreadID)
 	Result[id.xy] = float4(glow(id.xy-center,radius),0,0,0);
 }
 
+
+#pragma kernel Square
+[numthreads(8,8,1)]
+void Square (uint3 id : SV_DispatchThreadID)
+{
+	Result[id.xy] = float4(inSquare(id.xy,rect),0,0,0);
+}

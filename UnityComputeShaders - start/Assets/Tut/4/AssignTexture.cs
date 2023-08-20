@@ -19,7 +19,7 @@ public class AssignTexture : MonoBehaviour
 		outputTexture.Create();
 		rend.material.SetTexture("_MainTex",outputTexture);
 		InitShader();
-		// DispatchShader(texResolution/16,texResolution/16);
+		DispatchShader(texResolution/8,texResolution/8);
 	}
 	
 	private void InitShader()
@@ -27,16 +27,13 @@ public class AssignTexture : MonoBehaviour
 		kernelHandle = shader.FindKernel(name:kernelName);
 		shader.SetTexture(kernelHandle,"Result",outputTexture);
 		shader.SetInt(nameof(texResolution),texResolution);
+		
+		Vector4 rect = new Vector4(10,15,texResolution-56,texResolution-56);
+		shader.SetVector("rect",rect);
 	}
 	
 	private void DispatchShader(int x,int y)
 	{
 		shader.Dispatch(kernelHandle,x,y,1);
-	}
-	
-	
-	private void Update()
-	{
-		if(Input.GetKeyUp(KeyCode.Space)) DispatchShader(texResolution/8,texResolution/8);
 	}
 }
