@@ -1,49 +1,40 @@
-﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel CSMain
-
+﻿#include "noiseSimplex.cginc"
 #define PI2 6.28318530718
 
-// Create a RenderTexture with enableRandomWrite flag and set it
-// with cs.SetTexture
+
 RWTexture2D<float4> Result;
 int texResolution;
-
 float4 fillColor;
 float4 clearColor;
 int sides;
 float time;
 
-#include "noiseSimplex.cginc"
 
-float polygon(float2 pt, float2 center, float radius, int sides, float rotate, float edge_thickness){
-    pt -= center;
+float polygon(float2 pt, float2 center, float radius, int sides, float rotate, float edge_thickness)
+{
+	pt -= center;
+	
+	//Angle and radius from the current pixel /
+	float theta = atan2(pt.y, pt.x) + rotate;
+	float rad = PI2/float(sides);
 
-    //Angle and radius from the current pixel /
-    float theta = atan2(pt.y, pt.x) + rotate;
-    float rad = PI2/float(sides);
-
-    // Shaping function that modulate the distance
-    float d = cos(floor(0.5 + theta/rad)*rad-theta)*length(pt);
-
-    return 1.0 - smoothstep(radius, radius + edge_thickness, d);
+	// Shaping function that modulate the distance
+	float d = cos(floor(0.5 + theta/rad)*rad-theta)*length(pt);
+	return 1.0 - smoothstep(radius, radius + edge_thickness, d);
 }
 
+#pragma kernel CSMain
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-	//1. Change the coordinate space of id.xy from (0,0)-(texResolution,texResolution) to (-0.5, -0.5)-(0.5,0.5)
+	float2 normalizedPos = (id.xy/(float)texResolution)-0.5f;
 	
-	//2. Set the center to (0,0) and radius to 0.15
+	float2 center = 0;
+	float radius = 0.15f;
+	float resultPolygon = polygon(normalizedPos,center,radius,sides,time,0.1f);
 	
-	//3. Call polygon using the pt you calculated at step 1, the center and radius from step 2. 
-	//   sides and time are passed from the C# script
-    
-    //4. Set noise. Use the snoise function and pt * 100
-    
-    //5. Use the HLSL function lerp to blend between clearColor and fillColor*noise using the return
-    //   value from step 3
-    
-    float4 color = 1;
-
-    Result[id.xy] = color;
+	float resultNoise = snoise(normalizedPos*100*(2+sin(time)));
+	float4 resultColor = lerp(clearColor,fillColor,resultNoise);
+	
+	Result[id.xy] = resultPolygon*resultColor;
 }
