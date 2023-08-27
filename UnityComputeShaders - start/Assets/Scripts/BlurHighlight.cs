@@ -17,26 +17,28 @@ public class BlurHighlight : BaseCompletePP
 	public Transform trackedObject;
 	private Vector4 center;
 	
-	private RenderTexture horzOutput = null;
-	private int kernelHorzPassID = -1;
+	private RenderTexture blurOutput = null;
+	private int kernelBlurPass = -1;
+	// private int kernelHorzPassID = -1;
+	// private int kernelVertPassID = -1;
 	
 	protected override void Init()
 	{
-		Debug.Log("Init");
 		center = new Vector4();
 		kernelName = "Highlight";
-		kernelHorzPassID = shader.FindKernel("HorzPass");
+		kernelBlurPass = shader.FindKernel("BlurPass");
+		// kernelHorzPassID = shader.FindKernel("HorzPass");
+		// kernelVertPassID = shader.FindKernel("VertPass");
 		base.Init();
-		Debug.Log($"kernelHorzPassID:{kernelHorzPassID}");
 	}
 	
 	protected override void CreateTextures()
 	{
 		base.CreateTextures();
-		CreateTexture(ref horzOutput);
-		shader.SetTexture(kernelHorzPassID,"source",renderedSource);
-		shader.SetTexture(kernelHorzPassID,"horzOutput",horzOutput);
-		shader.SetTexture(kernelHandle,"horzOutput",horzOutput);
+		CreateTexture(ref blurOutput);
+		shader.SetTexture(kernelBlurPass,"source",renderedSource);
+		shader.SetTexture(kernelBlurPass,"blurOutput",blurOutput);
+		shader.SetTexture(kernelHandle,"blurOutput",blurOutput);
 	}
 	
 	private void OnValidate()
@@ -58,7 +60,7 @@ public class BlurHighlight : BaseCompletePP
 	{
 		if (!init) return;
 		Graphics.Blit(source, renderedSource);
-		shader.Dispatch(kernelHorzPassID,groupSize.x,groupSize.y,1);
+		shader.Dispatch(kernelBlurPass,groupSize.x,groupSize.y,1);
 		shader.Dispatch(kernelHandle, groupSize.x, groupSize.y, 1);
 		Graphics.Blit(output, destination);
 	}

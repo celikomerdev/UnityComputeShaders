@@ -1,7 +1,7 @@
 ﻿
 
 shared Texture2D<float4> source;
-shared RWTexture2D<float4> horzOutput;
+shared RWTexture2D<float4> blurOutput;
 RWTexture2D<float4> output;
 float radius;
 float edgeWidth;
@@ -17,44 +17,40 @@ float inCircle( float2 pt, float2 center, float radius, float edgeWidth )
 }
 
 
-#pragma kernel HorzPass
+
+#pragma kernel BlurPass
 [numthreads(8, 8, 1)]
-void HorzPass(uint3 id : SV_DispatchThreadID)
+void BlurPass(uint3 id : SV_DispatchThreadID)
 {
 	float4 color = 0;
+	blurOutput[id.xy] = 0;
 	
-	// int left = max(0,(int)id.x-blurRadius);
-	// int count = min(blurRadius,(int)id.x) + min(blurRadius,source.Length.x-(int)id.x);
-	// uint2 index = uint2(left,id.y);
-	// [unroll(64)]
-	// for (int x=0; x<count; x++)
-	// {
-	// 	color += source[index];
-	// 	index.x++;
-	// }
-	// color /= (float)count;
-	
-	// int left = id.x;
+	color = 0;
 	int left = max(0,(int)id.x-blurRadius);
 	int right = min(source.Length.x,(int)id.x+blurRadius);
-	// int right = id.x;
-	
-	[unroll(64)]
 	for (int x=left; x<right; x++)
 	{
 		color += source[int2(x,id.y)];
 	}
-	color /= (float)(right-left);
+	blurOutput[id.xy] += color/(abs(left-right)*2.0f);
 	
-	
-	horzOutput[id.xy] = color;
+	color = 0;
+	int bottom = max(0,(int)id.y-blurRadius);
+	int top = min(source.Length.y,(int)id.y+blurRadius);
+	for (int y=bottom; y<top; y++)
+	{
+		color += source[int2(id.x,y)];
+	}
+	blurOutput[id.xy] += color/(abs(bottom-top)*2.0f);
 }
-
 
 #pragma kernel Highlight
 [numthreads(8, 8, 1)]
 void Highlight(uint3 id : SV_DispatchThreadID)
 {
-	float4 color = horzOutput[id.xy];
+	float4 sourceColor = source[id.xy];
+	float4 shadedSourceColor = blurOutput[id.xy]*shade;
+	float highlight = inCircle(id.xy,center.xy,radius,edgeWidth);
+	float4 color = lerp(shadedSourceColor,sourceColor,highlight);
 	output[id.xy] = color;
 }
