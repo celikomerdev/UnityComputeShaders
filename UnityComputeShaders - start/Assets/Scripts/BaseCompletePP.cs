@@ -34,6 +34,8 @@ public class BaseCompletePP : MonoBehaviour
         }
 
         kernelHandle = shader.FindKernel(kernelName);
+		Debug.Log($"kernelHandle:{kernelHandle}");
+		
 
         thisCamera = GetComponent<Camera>();
 

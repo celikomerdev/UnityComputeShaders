@@ -1,6 +1,4 @@
-﻿// Each #kernel tells which function to compile; you can have many kernels
-#pragma kernel HorzPass
-#pragma kernel Highlight
+﻿
 
 shared Texture2D<float4> source;
 shared RWTexture2D<float4> horzOutput;
@@ -11,22 +9,52 @@ float shade;
 float4 center;
 int blurRadius;
 
-float inCircle( float2 pt, float2 center, float radius, float edgeWidth ){
-    float len = length(pt - center);
-    return 1.0 - smoothstep(radius-edgeWidth, radius, len);
+
+float inCircle( float2 pt, float2 center, float radius, float edgeWidth )
+{
+	float len = length(pt - center);
+	return 1.0 - smoothstep(radius-edgeWidth, radius, len);
 }
 
+
+#pragma kernel HorzPass
 [numthreads(8, 8, 1)]
 void HorzPass(uint3 id : SV_DispatchThreadID)
 {
-    
+	float4 color = 0;
+	
+	// int left = max(0,(int)id.x-blurRadius);
+	// int count = min(blurRadius,(int)id.x) + min(blurRadius,source.Length.x-(int)id.x);
+	// uint2 index = uint2(left,id.y);
+	// [unroll(64)]
+	// for (int x=0; x<count; x++)
+	// {
+	// 	color += source[index];
+	// 	index.x++;
+	// }
+	// color /= (float)count;
+	
+	// int left = id.x;
+	int left = max(0,(int)id.x-blurRadius);
+	int right = min(source.Length.x,(int)id.x+blurRadius);
+	// int right = id.x;
+	
+	[unroll(64)]
+	for (int x=left; x<right; x++)
+	{
+		color += source[int2(x,id.y)];
+	}
+	color /= (float)(right-left);
+	
+	
+	horzOutput[id.xy] = color;
 }
 
+
+#pragma kernel Highlight
 [numthreads(8, 8, 1)]
 void Highlight(uint3 id : SV_DispatchThreadID)
 {
-    float4 color = source[id.xy];
-
-    output[id.xy] = color;
-
+	float4 color = horzOutput[id.xy];
+	output[id.xy] = color;
 }
